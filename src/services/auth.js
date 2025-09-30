@@ -4,14 +4,14 @@ import { UsersCollection } from '../db/models/user.js';
 import { randomBytes } from 'crypto';
 import { FIFTEEN_MINUTES, ONE_MONTH } from '../constants/index.js';
 import { SessionsCollection } from '../db/models/session.js';
-// import jwt from 'jsonwebtoken';
-// import { SMTP } from '../constants/index.js';
+import jwt from 'jsonwebtoken';
+import { SMTP } from '../constants/index.js';
 import { env } from '../utils/env.js';
-// import { sendEmail } from '../utils/sendMail.js';
+import { sendEmail } from '../utils/sendMail.js';
 import handlebars from 'handlebars';
-// import path from 'node:path';
-// import fs from 'node:fs/promises';
-// import { TEMPLATES_DIR } from '../constants/index.js';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { TEMPLATES_DIR } from '../constants/index.js';
 
 export const registerUser = async (payload) => {
   const user = await UsersCollection.findOne({ email: payload.email });
