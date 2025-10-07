@@ -18,7 +18,12 @@ export const startServer = () => {
       type: ['application/json', 'application/vnd.api+json'],
     }),
   );
-  app.use(cors());
+  app.use(
+    cors({
+      origin: ['http://localhost:5173', 'https://petbilgimerkezi.com'], // izinli frontend URL'leri
+      credentials: true, // cookie/token göndermeye izin ver
+    }),
+  );
   app.use(cookieParser());
 
 
