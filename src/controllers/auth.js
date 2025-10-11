@@ -5,6 +5,7 @@ import { logoutUser } from '../services/auth.js';
 import { refreshUsersSession } from '../services/auth.js';
 import { requestResetToken } from '../services/auth.js';
 import { resetPassword } from '../services/auth.js';
+import { UsersCollection } from '../db/models/user.js';
 
 export const registerUserController = async (req, res) => {
   const user = await registerUser(req.body);
@@ -18,6 +19,7 @@ export const registerUserController = async (req, res) => {
 
 export const loginUserController = async (req, res) => {
   const session = await loginUser(req.body);
+   const user = await UsersCollection.findOne({ email: req.body.email });
 
   res.cookie('refreshToken', session.refreshToken, {
     httpOnly: true,
@@ -32,6 +34,11 @@ export const loginUserController = async (req, res) => {
     status: 200,
     message: 'Successfully logged in an user!',
     data: {
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
       accessToken: session.accessToken,
     },
   });
