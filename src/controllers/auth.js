@@ -7,9 +7,29 @@ import { requestResetToken } from '../services/auth.js';
 import { resetPassword } from '../services/auth.js';
 import { UsersCollection } from '../db/models/user.js';
 
-
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Cookie ayarlarını merkezi bir fonksiyona taşıdık
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction, // Render’da HTTPS zorunlu
+  sameSite: isProduction ? 'None' : 'Lax', // Cross-origin için gerekli
+  expires: new Date(Date.now() + ONE_MONTH),
+};
+
+// Yeni session cookie’lerini ayarlamak için yardımcı fonksiyon
+const setupSession = (res, session) => {
+  res.cookie('refreshToken', session.refreshToken, {
+    ...cookieOptions,
+    path: '/api/auth/refresh', // refresh endpoint’ine özel cookie
+  });
+
+  res.cookie('sessionId', session._id, {
+    ...cookieOptions,
+  });
+};
+
+// 🧩 REGISTER
 export const registerUserController = async (req, res) => {
   const user = await registerUser(req.body);
 
@@ -20,22 +40,17 @@ export const registerUserController = async (req, res) => {
   });
 };
 
+// 🧩 LOGIN
 export const loginUserController = async (req, res) => {
   const session = await loginUser(req.body);
-   const user = await UsersCollection.findOne({ email: req.body.email });
+  const user = await UsersCollection.findOne({ email: req.body.email });
 
-  res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    expires: new Date(Date.now() + ONE_MONTH),
-  });
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    expires: new Date(Date.now() + ONE_MONTH),
-  });
+  // Cookie’leri güvenli şekilde ayarla
+  setupSession(res, session);
 
   res.json({
     status: 200,
-    message: 'Successfully logged in an user!',
+    message: 'Successfully logged in user!',
     data: {
       user: {
         _id: user._id,
@@ -46,47 +61,61 @@ export const loginUserController = async (req, res) => {
     },
   });
 };
+
+// 🧩 LOGOUT
 export const logoutUserController = async (req, res) => {
   if (req.cookies.sessionId) {
     await logoutUser(req.cookies.sessionId);
   }
 
-  res.clearCookie('sessionId');
-  res.clearCookie('refreshToken');
+  // Cookie’leri güvenli şekilde temizle
+  res.clearCookie('sessionId', {
+    ...cookieOptions,
+  });
+  res.clearCookie('refreshToken', {
+    ...cookieOptions,
+    path: '/api/auth/refresh',
+  });
 
   res.status(204).send();
 };
-const setupSession = (res, session) => {
-  res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    expires: new Date(Date.now() + ONE_MONTH),
-  });
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    expires: new Date(Date.now() + ONE_MONTH),
-  });
-};
 
+// 🧩 REFRESH SESSION
 export const refreshUserSessionController = async (req, res) => {
-  const session = await refreshUsersSession({
-    sessionId: req.cookies.sessionId,
-    refreshToken: req.cookies.refreshToken,
-  });
+  try {
+    const { sessionId, refreshToken } = req.cookies;
 
-  setupSession(res, session);
+    if (!sessionId || !refreshToken) {
+      return res.status(401).json({
+        status: 401,
+        message: 'Unauthorized - missing cookies',
+        data: {},
+      });
+    }
 
-  res.json({
-    status: 200,
-    message: 'Successfully refreshed a session!',
-    data: {
-      accessToken: session.accessToken,
-    },
-  });
+    const session = await refreshUsersSession({ sessionId, refreshToken });
+
+    // Yeni cookie’leri ayarla
+    setupSession(res, session);
+
+    res.json({
+      status: 200,
+      message: 'Successfully refreshed session!',
+      data: {
+        accessToken: session.accessToken,
+      },
+    });
+  } catch (error) {
+    console.error('Refresh session error:', error.message);
+    res.status(401).json({
+      status: 401,
+      message: 'Unauthorized - invalid session or refresh token',
+      data: {},
+    });
+  }
 };
+
+// 🧩 PASSWORD RESET FLOW
 export const sendResetEmailController = async (req, res) => {
   await requestResetToken(req.body.email);
   res.json({
