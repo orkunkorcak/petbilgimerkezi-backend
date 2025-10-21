@@ -18,12 +18,17 @@ export const startServer = () => {
       type: ['application/json', 'application/vnd.api+json'],
     }),
   );
+  const isProduction = process.env.NODE_ENV === 'production';
+
   app.use(
     cors({
-      origin: ['http://localhost:5173', 'https://petbilgimerkezi.com'], // izinli frontend URL'leri
-      credentials: true, // cookie/token göndermeye izin ver
+      origin: isProduction
+        ? ['https://petbilgimerkezi.com']
+        : ['http://localhost:5173'],
+      credentials: true,
     }),
   );
+
   app.use(cookieParser());
 
 

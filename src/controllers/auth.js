@@ -7,6 +7,9 @@ import { requestResetToken } from '../services/auth.js';
 import { resetPassword } from '../services/auth.js';
 import { UsersCollection } from '../db/models/user.js';
 
+
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const registerUserController = async (req, res) => {
   const user = await registerUser(req.body);
 
@@ -56,14 +59,14 @@ export const logoutUserController = async (req, res) => {
 const setupSession = (res, session) => {
   res.cookie('refreshToken', session.refreshToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(Date.now() + ONE_MONTH),
   });
   res.cookie('sessionId', session._id, {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(Date.now() + ONE_MONTH),
   });
 };
