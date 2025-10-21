@@ -21,7 +21,6 @@ const cookieOptions = {
 const setupSession = (res, session) => {
   res.cookie('refreshToken', session.refreshToken, {
     ...cookieOptions,
-    path: '/api/auth/refresh', // refresh endpoint’ine özel cookie
   });
 
   res.cookie('sessionId', session._id, {
@@ -74,7 +73,6 @@ export const logoutUserController = async (req, res) => {
   });
   res.clearCookie('refreshToken', {
     ...cookieOptions,
-    path: '/api/auth/refresh',
   });
 
   res.status(204).send();
