@@ -124,7 +124,7 @@ export const requestResetToken = async (email) => {
   await sendEmail({
     from: env(SMTP.SMTP_FROM),
     to: email,
-    subject: 'Reset your password',
+    subject: 'Yeni şifre belirleme',
     html,
   });
 };
