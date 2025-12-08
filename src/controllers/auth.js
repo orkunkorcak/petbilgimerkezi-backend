@@ -131,3 +131,22 @@ export const resetPasswordController = async (req, res) => {
     data: {},
   });
 };
+//update user
+export const updateUserController = async (req, res) => {
+  const userId = req.params.id;
+  const updateData = req.body;
+  const updatedUser = await UsersCollection.findByIdAndUpdate(userId, updateData, { new: true });
+
+  if (!updatedUser) {
+    return res.status(404).json({
+      status: 404,
+      message: 'User not found',
+      data: {},
+    });
+  }
+  res.json({
+    status: 200,
+    message: 'User successfully updated!',
+    data: updatedUser,
+  });
+};

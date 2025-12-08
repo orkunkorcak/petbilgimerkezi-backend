@@ -4,6 +4,8 @@ const validateBody = (schema) => async (req, res, next) => {
   try {
     await schema.validateAsync(req.body, {
       abortEarly: false,
+      convert: true,
+      stripUnknown: true,
     });
     next();
   } catch (err) {

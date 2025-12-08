@@ -12,6 +12,8 @@ import { sendResetEmailSchema } from '../validation/auth.js';
 import { sendResetEmailController } from '../controllers/auth.js';
 import { resetPasswordSchema } from '../validation/auth.js';
 import { resetPasswordController } from '../controllers/auth.js';
+import { updateUserSchema } from '../validation/auth.js';
+import { updateUserController } from '../controllers/auth.js';
 
 const authRouter = Router();
 
@@ -38,4 +40,10 @@ authRouter.post(
   validateBody(resetPasswordSchema),
   ctrlWrapper(resetPasswordController),
 );
+authRouter.patch(
+  '/update-user/:id',
+  validateBody(updateUserSchema),
+  ctrlWrapper(updateUserController),
+);
+
 export default authRouter;
