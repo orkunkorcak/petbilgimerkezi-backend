@@ -16,7 +16,7 @@ export const startServer = () => {
   // ✅ CORS yapılandırması
   const allowedOrigins = [
     'http://localhost:5173',
-    'https://petbilgimerkezi.com',
+    'https://www.petbilgimerkezi.com',
   ];
 
   app.use(
